@@ -1,18 +1,26 @@
 import treasureApi from "../api";
-import { takeLatest, put, retry } from "redux-saga/effects";
-import { TREASURE } from "../constants";
+import { put, retry } from "redux-saga/effects";
+import { TREASURE, TREASURE_TEXT } from "../constants";
 import { IAction } from "../typescript";
+import { setError } from "../actions/errors";
+import { Alert, Vibration } from "react-native";
 
-function* checkTreasure(siteId: number) {
+export function* checkTreasure(siteId: number) {
     try {
+        console.log('checkTreasure: ', siteId);
         const hasTreasure: boolean = yield retry(3, 250, treasureApi.siteHasTreasure, siteId);
-        const treasureAction: IAction = { type: hasTreasure ? TREASURE.FOUND : TREASURE.NOT_FOUND };
+        console.log('hasTreasure', hasTreasure);
+        let treasureAction: IAction = { type: TREASURE.FOUND };
+        if (hasTreasure) {
+            Vibration.vibrate(400);
+            Alert.alert(TREASURE_TEXT.found);
+        } else {
+            Alert.alert(TREASURE_TEXT.notFound);
+            treasureAction.type = TREASURE.NOT_FOUND;
+        }
         yield put(treasureAction);
     } catch (error) {
-        yield put({ type: TREASURE.CHECK_FAILURE });
+        console.log('in treasure error')
+        yield put(setError(error, TREASURE.CHECK_FAILURE));
     }
-}
-
-export function* watchCheckTreasure(id: number) {
-    yield takeLatest(TREASURE.CHECK, checkTreasure, id);
 }

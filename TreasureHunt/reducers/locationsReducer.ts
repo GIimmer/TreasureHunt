@@ -13,7 +13,7 @@ const initialState: ILocationsState = {
 
 const locationsReducer = (state = initialState, action: IAction) => {
     switch (action.type) {
-        case LOCATIONS.LOAD :
+        case LOCATIONS.LOAD:
             return { ...state, loading: true };
         
         case LOCATIONS.LOAD_SUCCESS:
@@ -21,6 +21,7 @@ const locationsReducer = (state = initialState, action: IAction) => {
         
         case LOCATIONS.CLICK:
         default:
+            console.log('action: ', action);
             return state;
     }
 };
