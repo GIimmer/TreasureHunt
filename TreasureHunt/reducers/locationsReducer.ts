@@ -17,7 +17,7 @@ const locationsReducer = (state = initialState, action: IAction) => {
             return { ...state, loading: true };
         
         case LOCATIONS.LOAD_SUCCESS:
-            return { ...state, locations: action.payload };
+            return { loading: false, locations: action.payload };
         
         case LOCATIONS.CLICK:
         default:
