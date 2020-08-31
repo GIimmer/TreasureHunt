@@ -11,6 +11,8 @@ type ITreasureMapProps = ITreasureMapFunctions & ITreasureMapState
 
 type IMapEvent = MapEvent & { nativeEvent: { id: string }};
 
+// I typically use functional components, but for complex components like this I sometimes still use classes.
+// I will look into making this functional/perhaps modularizing the markers shortly.
 export class TreasureMap extends Component<ITreasureMapProps> {
     state: ITreasureMapProps;
 
@@ -70,21 +72,20 @@ export class TreasureMap extends Component<ITreasureMapProps> {
     }
 }
 
-// 
+// -------------- StateToProps -------------- //
 interface ITreasureMapState {
     locations: ILocation[];
     locationsLoading: boolean;
 }
 
 const mapStateToProps = (state: IState): ITreasureMapState => {
-    console.log('state to props: ', state)
     return {
         locations: state.locations.locations,
         locationsLoading: state.locations.loading
     }
 };
 
-
+// -------------- DispatchToProps -------------- //
 interface ITreasureMapFunctions {
     loadLocations: () => void;
     clickLocation: (id: number) => void;

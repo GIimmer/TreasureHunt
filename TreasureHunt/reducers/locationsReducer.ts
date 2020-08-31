@@ -21,7 +21,6 @@ const locationsReducer = (state = initialState, action: IAction) => {
         
         case LOCATIONS.CLICK:
         default:
-            console.log('action: ', action);
             return state;
     }
 };
