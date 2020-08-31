@@ -1,6 +1,6 @@
 import { LOCATIONS, TREASURE } from './actionTypes'
 import { API_KEYS, API_ENDPOINTS } from './api'
-import { TREASURE_TEXT } from './eventText'
+import { TREASURE_TEXT, ERROR_TEXT } from './eventText'
 
 
 export {
@@ -8,5 +8,6 @@ export {
     TREASURE,
     API_KEYS,
     API_ENDPOINTS,
-    TREASURE_TEXT
+    TREASURE_TEXT,
+    ERROR_TEXT
 };
