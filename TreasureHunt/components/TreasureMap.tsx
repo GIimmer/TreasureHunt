@@ -1,82 +1,96 @@
 import React, { Component, Dispatch } from 'react'
 import { connect } from 'react-redux'
 import { IState, IAction, ILocation } from '../typescript/interfaces'
-import MapView, { Region, MarkerProps } from 'react-native-maps'
+import MapView, { MapEvent } from 'react-native-maps'
 import { Marker } from 'react-native-maps'
 import { clickLocation, loadLocations } from '../actions/locations'
-import { getMinMax } from '../utilities/utilityFuncs'
+import { initialRegionFromLocations } from '../utilities/utilityFuncs'
 
 
-type ITreasureMapProps = IState & {
-    [key: string]: Function
-}
+type ITreasureMapProps = ITreasureMapFunctions & ITreasureMapState
+
+type IMapEvent = MapEvent & { nativeEvent: { id: string }};
 
 export class TreasureMap extends Component<ITreasureMapProps> {
-    locations: ILocation[];    
+    state: ITreasureMapProps;
 
     constructor(props: ITreasureMapProps) {
         super(props);
-        this.locations = props.locations.locations;
-    }
-
-    onSelect(marker: MarkerProps) {
-        this.props.clickLocation(Number.parseInt(marker.identifier as string))
-    }
-
-    computeInitialRegion(locations: ILocation[]): Region {
-        const latBuffer = .01;
-        const longBuffer = .01;
-
-        function getCenterAndDelta(min: number, max: number, buffer: number): number[] {
-            const midpointDiff = (max - min)/2;
-            return [min + midpointDiff, midpointDiff + buffer]
-        }
-
-        const [latMin, latMax] = getMinMax<ILocation>(locations, (a, b) => a.latitude - b.latitude);
-        const [latCenter, latDelta] = getCenterAndDelta(latMin.latitude, latMax.latitude, latBuffer);
-
-        const [longMin, longMax] = getMinMax<ILocation>(locations, (a, b) => a.longitude - b.longitude);
-        const [longCenter, longDelta] = getCenterAndDelta(longMin.longitude, longMax.longitude, longBuffer);
-
-
-        return {
-            latitude: latCenter,
-            longitude: longCenter,
-            latitudeDelta: latDelta,
-            longitudeDelta: longDelta,
+        this.state = {
+            locations: props.locations,
+            locationsLoading: props.locationsLoading,
+            loadLocations: props.loadLocations,
+            clickLocation: props.clickLocation
         }
     }
 
+    componentDidMount() {
+        this.props.loadLocations();
+    }
+    
+    componentDidUpdate(previousProps: ITreasureMapProps, previousState: ITreasureMapProps) {
+        if (this.props.locations !== previousProps.locations) {
+            this.setState({
+                ...previousState,
+                locations: this.props.locations
+            })   
+        }
+    }
+
+    onSelect(event: IMapEvent) {
+        event.preventDefault();
+        this.props.clickLocation(Number.parseInt(event.nativeEvent.id));
+    }
 
     render() {
-        const initialRegion = this.computeInitialRegion(this.locations);
+        const initialRegion = initialRegionFromLocations(this.state.locations);
         return (
-            <MapView
+            <>
+            {
+                initialRegion &&
+                <MapView
+                style={{ width: '100%', height: '100%' }}
                 initialRegion={initialRegion}
-            >
+                >
                 {
-                    this.locations && this.locations.length && this.locations.map(location => {
+                    this.state.locations && this.state.locations.map(location => {
                         return <Marker 
-                        title={location.id.toString()}
+                        key={location.id}
+                        identifier={location.id.toString()}
+                        title={`Marker ${location.id.toString()}`}
                         coordinate={{ latitude: location.latitude, longitude: location.longitude }}
-                        onSelect={}
-                        >
-
-                        </Marker>
+                        onPress={this.onSelect.bind(this)}
+                        />
                     })
                 }
-
-                
-            </MapView>
+                </MapView>
+            }
+            </>
         )
     }
 }
 
-const mapStateToProps = (state: IState): IState => ({
-    ...state
-});
+// 
+interface ITreasureMapState {
+    locations: ILocation[];
+    locationsLoading: boolean;
+}
 
-const mapDispatchToProps = (dispatch: any) => ({
+const mapStateToProps = (state: IState): ITreasureMapState => {
+    console.log('state to props: ', state)
+    return {
+        locations: state.locations.locations,
+        locationsLoading: state.locations.loading
+    }
+};
+
+
+interface ITreasureMapFunctions {
+    loadLocations: () => void;
+    clickLocation: (id: number) => void;
+}
+
+const mapDispatchToProps = (dispatch: any): ITreasureMapFunctions => ({
     loadLocations(){
         dispatch(loadLocations()) as Dispatch<IAction>
     },
@@ -84,5 +98,7 @@ const mapDispatchToProps = (dispatch: any) => ({
         dispatch(clickLocation(id)) as Dispatch<IAction>
     }
 })
+
+
 
 export default connect(mapStateToProps, mapDispatchToProps)(TreasureMap)
